@@ -1,0 +1,20 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>zebra00.svg</file>
+        <file>zebra01.svg</file>
+        <file>zebra02.svg</file>
+        <file>zebra03.svg</file>
+        <file>zebra09.svg</file>
+        <file>zebra07.svg</file>
+        <file>zebraAppt.svg</file>
+        <file>checkmark.png</file>
+        <file>web.png</file>
+        <file>tick-button.png</file>
+        <file>umbrella.png</file>
+        <file>umbrella--plus.png</file>
+        <file>globe.png</file>
+    </qresource>
+    <qresource prefix="/lang">
+        <file>zebra_ru_RU.qm</file>
+    </qresource>
+</RCC>
