@@ -38,7 +38,7 @@ Messages::Messages(QWidget *parent) :
     ui->tableView->setColumnWidth(2, 170);
     ui->tableView->setColumnWidth(3, 200);
     ui->tableView->setColumnWidth(4, 200);
-    ui->tableView->verticalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+    ui->tableView->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->tableView->resizeRowsToContents();
 }
 

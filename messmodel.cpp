@@ -29,10 +29,10 @@ QVariant Messmodel::data(const QModelIndex &index, int role) const
 
     if (index.column() == 0){
 
-        return row.gdate().toLongLong();
+        return row.getdate().toLongLong();
     }else if (index.column() == 1){
         qint64 now = QDateTime::currentMSecsSinceEpoch();
-        qint64 messageDate = row.gdate().toLongLong();
+        qint64 messageDate = row.getdate().toLongLong();
         QString str;
         if( (now - messageDate) >= 86400000)
             str = QString("<b>%1</b>").arg( QDateTime::fromMSecsSinceEpoch(messageDate).toString("dd.MM.yy hh:mm"));
@@ -42,24 +42,24 @@ QVariant Messmodel::data(const QModelIndex &index, int role) const
         return QString("<div align=\"right\" style=\"text-align: center;\">%5</div>"
                        "<div style=\"font-weight: bold;\">%1 <span style=\"color: #666666;\">%2</span></div>"
                        "<span style=\" font-family:'Arial';\">%3<br/>%4</span>")
-                        .arg(row.gname())
-                        .arg(row.gfrom())
-                        .arg(row.gsubject())
-                        .arg(row.gfragment())
+                        .arg(row.getname())
+                        .arg(row.getfrom())
+                        .arg(row.getsubject())
+                        .arg(row.getfragment())
                 .arg(str);
 
 
         //return QString("%1").arg(row.gdate());
     }else if (index.column() == 2){
         return QString("<b>%1 <span style=\"color: #666666;\">%2</b></span><br/><span style=\" font-family:'Arial';\">%3<br/>%4</span>")
-                .arg(row.gname())
-                .arg(row.gfrom())
-                .arg(row.gsubject())
-                .arg(row.gfragment());
+                .arg(row.getname())
+                .arg(row.getfrom())
+                .arg(row.getsubject())
+                .arg(row.getfragment());
     }else if (index.column() == 3){
-        return QString("%1<br/><span style=\" font-family:'Arial';\">%2</span>").arg(row.gsubject()).arg(row.gfragment());
+        return QString("%1<br/><span style=\" font-family:'Arial';\">%2</span>").arg(row.getsubject()).arg(row.getfragment());
     }else if (index.column() == 4)
-        return QString("<span style=\" font-family:'Arial';\">%1</span>").arg(row.gfragment());
+        return QString("<span style=\" font-family:'Arial';\">%1</span>").arg(row.getfragment());
 
     return QVariant();
 }
@@ -112,7 +112,7 @@ int Messmodel::check(const QList<inf_mail> &list)
         if(!Infmail.contains(A)){
 
             toAppend.append(A);
-            qDebug() << "add"<< A.gsubject();
+            qDebug() << "add"<< A.getsubject();
         }
     }
 
@@ -120,7 +120,7 @@ int Messmodel::check(const QList<inf_mail> &list)
         A = Infmail.at(i);
         if (!list.contains(A)){
             toRemove.append(A);
-            qDebug() << "rm"<< A.gsubject();
+            qDebug() << "rm"<< A.getsubject();
         }
     }
 
@@ -140,8 +140,8 @@ int Messmodel::check(const QList<inf_mail> &list)
         if(!Infmail.contains(A)){
             for ( int j = 0; j < Infmail.size(); ++j) {
                 B = Infmail.at(j);
-                qDebug() << B.gsubject();
-                if(A.gdate().toLongLong() < B.gdate().toLongLong()){
+                qDebug() << B.getsubject();
+                if(A.getdate().toLongLong() < B.getdate().toLongLong()){
                     k = j + 1;
                     qDebug() << "+++" << Infmail.size() << k;
                 }
@@ -158,7 +158,7 @@ QString Messmodel::getId(int row)
 {
     if (row < Infmail.size()){
         inf_mail id = Infmail.at(row);
-        return id.gdir();
+        return id.getmid();
     }
     return "";
 
@@ -168,7 +168,7 @@ QString Messmodel::getFrom(int row)
 {
     if (row < Infmail.size()){
         inf_mail id = Infmail.at(row);
-        return id.gfrom();
+        return id.getfrom();
     }
     return "";
 }

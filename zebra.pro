@@ -27,11 +27,13 @@ FORMS += \
 RESOURCES += \
     systray.qrc
 
-QT += xml svg core gui network
+QT += xml svg core gui network widgets multimedia xmlpatterns
 
 RC_FILE = zebra.rc
 
 TRANSLATIONS = zebra_ru_RU.ts
+
+LIBS += -lUser32
 
 CONFIG(release, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
 

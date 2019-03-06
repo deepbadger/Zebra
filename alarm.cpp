@@ -37,7 +37,7 @@ Alarm::Alarm(QWidget *parent) :
     //    ui->tableView->setColumnWidth(1, 90);
     //    ui->tableView->setColumnWidth(2, 150);
     //    ui->tableView->setColumnWidth(3, 90);
-    ui->tableView->verticalHeader()->setResizeMode(QHeaderView::ResizeToContents);
+    ui->tableView->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->tableView->resizeRowsToContents();
 
     connect(
