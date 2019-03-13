@@ -36,7 +36,7 @@ void ApptModel::setAppt(const QList<QString> Id, QMap<QString, QString> nextAlar
   }
 }
 
-int ApptModel::checkAppt(const QList<QString> Id)
+mresult ApptModel::checkAppt(const QList<QString> Id)
 {
   qint64 now = QDateTime::currentMSecsSinceEpoch();
   QList <QString> toRemove;
@@ -55,7 +55,7 @@ int ApptModel::checkAppt(const QList<QString> Id)
   }
 
   for (int i = 0; i < toRemove.size(); ++i) {
-    qDebug() << toRemove.at(i);
+    //qDebug() << toRemove.at(i);
     int ind = mId.indexOf(toRemove.at(i));
     beginRemoveRows(QModelIndex(), ind, ind);
     mId.removeAt(ind);
@@ -66,17 +66,18 @@ int ApptModel::checkAppt(const QList<QString> Id)
     mloc.remove(toRemove.at(i));
     endRemoveRows();
   }
-  return mId.size();
-
+  mresult r;
+  r.setresult(mId.size(),0,toRemove.size(),0);
+  return r;
 }
 
-int ApptModel::checkAppt(const QList<inf> &listAppt)
+mresult ApptModel::checkAppt(const QList<inf_appt> &listAppt)
 {
   qint64 now = QDateTime::currentMSecsSinceEpoch();
-  QList <inf> toRemove;
-  QList <inf> toRemoveBlack;
-  QList <inf> toAppend;
-  inf A,B;
+  QList <inf_appt> toRemove;
+  QList <inf_appt> toRemoveBlack;
+  QList <inf_appt> toAppend;
+  inf_appt A,B;
   qint64 start = 0,end = 0,alarm = 0;
 
   for (int i = 0; i < black.size(); ++i) {
@@ -86,40 +87,29 @@ int ApptModel::checkAppt(const QList<inf> &listAppt)
     if(!listAppt.contains(A)) {
       if (now > end) {
         toRemoveBlack.append(A);
-        //qDebug() << "toRemoveBlack";
       }
     }
   }
-
-
-
   for (int i = 0; i < listAppt.size(); ++i) {
     A = listAppt.at(i);
-    //qDebug() << "listApt " << A.getstr();
     start = A.getmalarmInstStart().toLongLong();
     end = start + A.getmdur().toLongLong();
     alarm = A.getmnextAlarm().toLongLong();
     if (black.contains(A)) {
       toRemove.append(A);
-      //qDebug() << "toRemove d";
       continue;
     }
     if(alarm > now) {
       toRemove.append(A);
-      //qDebug() << "toRemove a";
-
     } else {
       if(alarm > now) {
         toAppend.append(A);
-        //qDebug() << "toAppend";
       }
       if((alarm == 0) &&
           ((now < start) || (now > end))) {
         toRemove.append(A);
-        //qDebug() << "toRemove b";
       } else {
         toAppend.append(A);
-        //qDebug() << "toAppend";
       }
     }
   }
@@ -128,16 +118,11 @@ int ApptModel::checkAppt(const QList<inf> &listAppt)
     A = Appt.at(i);
     if (!listAppt.contains(A)) {
       toRemove.append(A);
-      // qDebug() << "toRemove c";
     }
   }
 
-
-
-
-  //qDebug() <<toAppend.size()<<toRemove.size()<<black.size() << Appt.size();
   for (int i = 0; i < toRemove.size(); ++i) {
-    inf rm = toRemove.at(i);
+    inf_appt rm = toRemove.at(i);
     if(Appt.contains(rm)) {
       int ind = Appt.indexOf(rm);
       beginRemoveRows(QModelIndex(), ind, ind);
@@ -145,9 +130,6 @@ int ApptModel::checkAppt(const QList<inf> &listAppt)
       endRemoveRows();
     }
   }
-
-
-
 
   int k = 0;
   for (int i = 0; i < toAppend.size(); ++i) {
@@ -179,14 +161,16 @@ int ApptModel::checkAppt(const QList<inf> &listAppt)
 //    }
 
   for (int i = 0; i < toRemoveBlack.size(); ++i) {
-    inf rm = toRemoveBlack.at(i);
+    inf_appt rm = toRemoveBlack.at(i);
     black.removeAll(rm);
   }
   //qDebug() <<toAppend.size()<<toRemove.size()<<black.size() << Appt.size();
-  return Appt.size();
+  mresult r;
+  r.setresult(Appt.size(),toAppend.size(),toRemove.size(),black.size());
+  return r;
 }
 
-int ApptModel::dismissAppt(inf infor)
+int ApptModel::dismissAppt(inf_appt infor)
 {
   if(!black.contains(infor)) {
     black.append(infor);
@@ -238,10 +222,10 @@ int ApptModel::appendAppt(const QString Id, QString nextAlarm, QString alarmInst
   return mId.size();
 }
 
-void ApptModel::getAppt(int row, inf &infor)
+void ApptModel::getAppt(int row, inf_appt &infor)
 {
 
-  inf id = Appt.at(row);
+  inf_appt id = Appt.at(row);
   infor = id;
 
 }
@@ -261,7 +245,7 @@ void ApptModel::upd()
 
 QString ApptModel::getMsg()
 {
-  inf A;
+  inf_appt A;
   QString res = "";
   for (int i = 0; i < Appt.size(); ++i) {
     A = Appt.at(i);
@@ -288,7 +272,7 @@ QVariant ApptModel::data(const QModelIndex &index, int role) const
   if (!index.isValid() || role != Qt::DisplayRole)
     return QVariant();
 
-  inf row = Appt.at(index.row());
+  inf_appt row = Appt.at(index.row());
   qint64 now = QDateTime::currentMSecsSinceEpoch();
   qint64 msecs = 0, start = 0,end = 0,alarm = 0;
   start = row.getmalarmInstStart().toLongLong();
@@ -301,9 +285,9 @@ QVariant ApptModel::data(const QModelIndex &index, int role) const
 
     if (now > start) {
       msecs = now - start;
-      formattedTime.append(tr("<div style=\"font-weight: bold; color: red;\">Overdue by "));
+      formattedTime.append("<div style=\"font-weight: bold; color: red;\">"+tr("Overdue by "));
     } else {
-      formattedTime.append(tr("<div style=\"font-weight: bold; color: green;\">In "));
+      formattedTime.append("<div style=\"font-weight: bold; color: green;\">"+tr("In "));
       msecs = start - now;
     }
     long long days = msecs/86400000;

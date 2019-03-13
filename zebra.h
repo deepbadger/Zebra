@@ -34,7 +34,7 @@ class Zebra;
 class QSslSocket;
 class Alarm;
 class Messages;
-class inf;
+class inf_appt;
 
 
 

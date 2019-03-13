@@ -17,4 +17,7 @@
     <qresource prefix="/lang">
         <file>zebra_ru_RU.qm</file>
     </qresource>
+    <qresource prefix="/sound">
+        <file>mail.wav</file>
+    </qresource>
 </RCC>

@@ -88,7 +88,8 @@ Zebra::Zebra(QWidget* parent): QDialog(parent),
 
   QIcon icon = QIcon(":/images/zebraAppt.svg");
   trayIconAppt->setIcon(icon);
-
+  trayIconAppt->show();
+  trayIconAppt->hide();
 
   //sendAuth();
   timer = new QTimer(this);
@@ -96,7 +97,7 @@ Zebra::Zebra(QWidget* parent): QDialog(parent),
   timer->start(ui->spinBox->value() * 1000);
 
 
-  trayIconAppt->setIcon(QIcon(":/images/zebraAppt.svg"));
+  //trayIconAppt->setIcon(QIcon(":/images/zebraAppt.svg"));
 
   //    timerIcon->start(800); // update it every 2 seconds
   //    timerIcon->stop();
@@ -172,7 +173,7 @@ void Zebra::timerupdate()
 
 void Zebra::setIconAppt(int index)
 {
-  //qDebug() << "setIcon";
+  qDebug() << "setIcon";
   QIcon icon = QIcon(":/images/zebraAppt.svg");
   trayIconAppt->setIcon(icon);
   if (index > 0)
@@ -184,23 +185,29 @@ void Zebra::setIconAppt(int index)
 
 void Zebra::setIconAppt(QString str)
 {
-//#ifdef DBG
-//  qDebug() << "setIconAppt: " << str;
-//#endif
+#ifdef DBG
+  qDebug() << "setIconAppt: " << str << str.isEmpty()<< trayIconAppt->isVisible() << alarm->isHidden();;
+#endif
   trayIconAppt->setToolTip(str);
   if (str.isEmpty()) {
-
     if (trayIconAppt->isVisible())
       trayIconAppt->hide();
     if (!alarm->isHidden())
       alarm->hide();
+#ifdef DBG
+    qDebug() << "setIconAppt tray wind " << trayIconAppt->isVisible() << alarm->isHidden();
+#endif
   } else {
     if (!trayIconAppt->isVisible()) {
-      if (alarm->isHidden())
-        alarm->show();
       trayIconAppt->show();
     }
+    if (alarm->isHidden())
+      alarm->show();
+#ifdef DBG
+    qDebug() << "setIconAppt tray wind " << trayIconAppt->isVisible() << alarm->isHidden();
+#endif
   }
+
 }
 
 void Zebra::showMessages(bool l)
@@ -220,9 +227,9 @@ void Zebra::showMessages(bool l)
 
 void Zebra::setIcon(int index)
 {
-//#ifdef DBG
-//  qDebug() << "setIcon" << index;
-//#endif
+#ifdef DBG
+  qDebug() << "setIcon" << index;
+#endif
   IconN = index;
   QIcon icon;
   if ((index != 7) && (index != 5))
@@ -262,7 +269,6 @@ void Zebra::iconActivated(QSystemTrayIcon::ActivationReason reason)
 //#endif
   switch (reason) {
     case QSystemTrayIcon::Trigger:
-
       sendSearch();
       break;
     case QSystemTrayIcon::DoubleClick:
@@ -541,7 +547,7 @@ void Zebra::runBrw(const QString& auth)
 
 void Zebra::viewMail()
 {
-#ifdef Q_OS_WIN32
+#ifdef Q_OS_WIN
   if (showBrowser())
     return;
 #endif
@@ -554,7 +560,6 @@ void Zebra::viewMail()
 
 void Zebra::viewmessMail()
 {
-
   emit addFilter(ui->rxEdit->toPlainText());
   mess->setVisible(mess->isHidden());
 
@@ -564,8 +569,7 @@ void Zebra::viewmessMail()
 
 void Zebra::changeBrowser()
 {
-  QString str = QFileDialog::getOpenFileName(0, "Open Dialog", "", "*.exe");
-
+  QString str = QFileDialog::getOpenFileName(nullptr, "Open Dialog", "", "*.exe");
   if (!str.isEmpty()) {
     ui->lineBrw->setText(str);
 
@@ -574,7 +578,6 @@ void Zebra::changeBrowser()
 
 void Zebra::updateTrayIcon()
 {
-  //qDebug() << ord;
   if (ord) {
     trayIcon->setIcon(QIcon(":/images/zebra03.svg"));
     ord = 0;
@@ -597,11 +600,16 @@ void Zebra::initSettings()
   _error_cnt = 0;
 
   //Заносим в settings значения из реестра
+  settings["Accounts"] = QString(QByteArray::fromBase64( configs.value("Accounts", "").toByteArray()));
+
   settings["URL"] = QString(QByteArray::fromBase64(
                               configs.value("URL",
                                   QString(QString("").toUtf8().toBase64())).toByteArray()));
   settings["Account"] = QString(QByteArray::fromBase64( configs.value("Account", "").toByteArray()));
   settings["Password"] = QString(QByteArray::fromBase64( configs.value("Password", "").toByteArray()));
+
+
+
   settings["Browser"] = QString(QByteArray::fromBase64( configs.value("Browser", "").toByteArray()));
   settings["RX"] = QString(QByteArray::fromBase64( configs.value("RX", "").toByteArray()));
   settings["stateRX"] = QString(QByteArray::fromBase64(
@@ -1088,413 +1096,414 @@ void Zebra::sslErrors(const QList<QSslError>& errors)
 void Zebra::appendString(const  QByteArray& line, const qint64& size)
 {
   return;
-  if (line.length() == 0) {
-    return;
-  }
-  //qDebug() << "\n>>>>>" << line<<"<<<<<\n";
+//  if (line.length() == 0) {
+//    return;
+//  }
+//  //qDebug() << "\n>>>>>" << line<<"<<<<<\n";
 
-  QString result;
-  qint64 sz = size;
+//  QString result;
+//  qint64 sz = size;
 
-  buffer = buffer.append(line);
-  if (buffer.contains("\r\n\r\n")) {
-#ifdef DBG
-    qDebug() << "\n\n\n%%%%%%%%%%%%%%%%\n\n";
-#endif
-    QString buff = QString::fromUtf8(buffer);
-    if (buff.startsWith("HTTP/1.1 ", Qt::CaseInsensitive)) {
-      QStringList header =  buff.trimmed().split("\n");
-      QStringList::const_iterator i;
-      _ContentLength = 0;
-      for (i = header.constBegin(); i != header.constEnd(); ++i) {
-        QString str = *i;
-        //qDebug() << "******************"<<str;
-        if (str.startsWith("Set-Cookie:"))
-          _cookie = str.remove("Set-Cookie:").trimmed() ;
-        if (str.startsWith("Content-Length:")) {
-          _chunked = 0;
-          _ContentLength = str.remove("Content-Length:").trimmed().toInt();
-#ifdef DBG
-          qDebug() << "_ContentLength:" << _ContentLength;
-#endif
-        }
-        if (str.startsWith("Transfer-Encoding: chunked")) {
-          QString s = header.last();
-          _chunked = 1;
-#ifdef DBG
-          qDebug() << "_ContentLength--:" << _ContentLength << s ;
-#endif
-        }
-      }
-#ifdef DBG
-      qDebug() << "\nBEGIN HEADER++++++++++++++++++++++++++++++++++++++++\n" << buffer << "\nEND HEADER++++++++++++++++++++++++++++++++++++++++\n";
-#endif
-      buffer = buffer.mid(buffer.indexOf("\r\n\r\n")).mid(4);
-      sz = size - (size - buffer.length());
-#ifdef DBG
-      qDebug() << "\nDROP1: ostatok" << buffer.length() << " allbytes" << size - (size - buffer.length()) << " " << _ContentLength;
-#endif
-      //return;
-    } else if (buff.contains("0\r\n\r\n")) {
-      qDebug() << "\n\n\nFINISH\n\n )))" << buffer;
-      QStringList header =  buff.trimmed().split("\r\n");
-      QStringList::const_iterator n;
-      bool ok;
-      int bytes;
-      for (n = header.constBegin(); n != header.constEnd(); ++n) {
-        QString str = *n;
-        if (str.trimmed() == "")
-          continue;
-        bytes = str.trimmed().toInt(&ok, 16);
-        if (ok) {
-#ifdef DBG
-          qDebug() << str << " hex " << bytes;
-#endif
-          _ContentLength = size;
-        } else {
-          result.append(str);
-        }
-      }
-      buffer = buffer.mid(buffer.indexOf("0\r\n\r\n")).mid(5);
-      sz = size - (size - buffer.length());
-#ifdef DBG
-      qDebug() << "\nDROP0: " << buffer.length();
-#endif
-    }
-
-
-  }
-
-  bool startauth = false;
-  _ContentLength = _ContentLength - sz;
-
-  if ((_ContentLength == 0) && (size != 0) && (_chunked == 0)) {
-    result = QString::fromUtf8(buffer);
-  }
-
-  if (!result.isNull()) {
-
-    QString rxtext = ui->rxEdit->toPlainText().trimmed();
-    QRegExp rx;
-    if (rxtext.length() > 0 ) {
-      rx.setPattern(rxtext);
-      rx.setPatternSyntax(QRegExp::RegExp2);
-      //rx.setCaseSensitivity(Qt::CaseInsensitive);
-
-    }
-    //trayIcon->showMessage("read", buffer, QSystemTrayIcon::Information, 15000);
-    QXmlStreamReader xml;
-    //ui->plainTextEdit->setPlainText( result);
-#ifdef DBG
-    qDebug() << "Result: " << result;
-#endif
-    xml.addData(result);
-    int count_mess = 0;
-    bool flagStateRX = false;
-    QString id = "", messageA = "", messageB = "", hashid = "", msg;
-    inf apptinf;
-    inf_mail message;
-    QList <inf> listApptinf;
-    QList <inf_mail> listMessage;
-    int DismissCalendarItemAlarmResponse = 0;
-    int MsgActionResponse = 0;
-    int SearchResponse = 0;
+//  buffer = buffer.append(line);
+//  if (buffer.contains("\r\n\r\n")) {
+//#ifdef DBG
+//    qDebug() << "\n\n\n%%%%%%%%%%%%%%%%\n\n";
+//#endif
+//    QString buff = QString::fromUtf8(buffer);
+//    if (buff.startsWith("HTTP/1.1 ", Qt::CaseInsensitive)) {
+//      QStringList header =  buff.trimmed().split("\n");
+//      QStringList::const_iterator i;
+//      _ContentLength = 0;
+//      for (i = header.constBegin(); i != header.constEnd(); ++i) {
+//        QString str = *i;
+//        //qDebug() << "******************"<<str;
+//        if (str.startsWith("Set-Cookie:"))
+//          _cookie = str.remove("Set-Cookie:").trimmed() ;
+//        if (str.startsWith("Content-Length:")) {
+//          _chunked = 0;
+//          _ContentLength = str.remove("Content-Length:").trimmed().toInt();
+//#ifdef DBG
+//          qDebug() << "_ContentLength:" << _ContentLength;
+//#endif
+//        }
+//        if (str.startsWith("Transfer-Encoding: chunked")) {
+//          QString s = header.last();
+//          _chunked = 1;
+//#ifdef DBG
+//          qDebug() << "_ContentLength--:" << _ContentLength << s ;
+//#endif
+//        }
+//      }
+//#ifdef DBG
+//      qDebug() << "\nBEGIN HEADER++++++++++++++++++++++++++++++++++++++++\n" << buffer << "\nEND HEADER++++++++++++++++++++++++++++++++++++++++\n";
+//#endif
+//      buffer = buffer.mid(buffer.indexOf("\r\n\r\n")).mid(4);
+//      sz = size - (size - buffer.length());
+//#ifdef DBG
+//      qDebug() << "\nDROP1: ostatok" << buffer.length() << " allbytes" << size - (size - buffer.length()) << " " << _ContentLength;
+//#endif
+//      //return;
+//    } else if (buff.contains("0\r\n\r\n")) {
+//      qDebug() << "\n\n\nFINISH\n\n )))" << buffer;
+//      QStringList header =  buff.trimmed().split("\r\n");
+//      QStringList::const_iterator n;
+//      bool ok;
+//      int bytes;
+//      for (n = header.constBegin(); n != header.constEnd(); ++n) {
+//        QString str = *n;
+//        if (str.trimmed() == "")
+//          continue;
+//        bytes = str.trimmed().toInt(&ok, 16);
+//        if (ok) {
+//#ifdef DBG
+//          qDebug() << str << " hex " << bytes;
+//#endif
+//          _ContentLength = size;
+//        } else {
+//          result.append(str);
+//        }
+//      }
+//      buffer = buffer.mid(buffer.indexOf("0\r\n\r\n")).mid(5);
+//      sz = size - (size - buffer.length());
+//#ifdef DBG
+//      qDebug() << "\nDROP0: " << buffer.length();
+//#endif
+//    }
 
 
-    while (!xml.atEnd()) { //xml parser
-      xml.readNext();
-      //******isStartElement
-      if (xml.isStartElement()) {
-        //---authToken
-        if (xml.name().contains("authToken", Qt::CaseInsensitive)) {
-          QString auth_token = xml.readElementText().trimmed();
-          if (auth_token.length() > 0) {
-            startauth = true;
-            _authToken = auth_token;
-          }
-#ifdef DBG
-          qDebug() << "_authToken:" << _authToken;
-#endif
-          break;
-        }
-        //---sessionID
-        if (xml.name().contains("session id", Qt::CaseInsensitive)) {
-          QString sessionID = xml.readElementText().trimmed();
-          if (sessionID.length() > 0) {
-            _sessionID = sessionID;
-          }
-#ifdef DBG
-          qDebug() << "sessionID:" << _sessionID;
-#endif
-          break;
-        }
-        //---DismissCalendarItemAlarmResponse
-        if (xml.name() == "DismissCalendarItemAlarmResponse") {
-          DismissCalendarItemAlarmResponse = 1;
-          break;
-        }
-        //---MsgActionResponse
-        if (xml.name() == "MsgActionResponse") {
-          MsgActionResponse = 1;
-          break;
-        }
-        //---SearchResponse
-        //                if (xml.name() == "SearchResponse"){
+//  }
+
+//  bool startauth = false;
+//  _ContentLength = _ContentLength - sz;
+
+//  if ((_ContentLength == 0) && (size != 0) && (_chunked == 0)) {
+//    result = QString::fromUtf8(buffer);
+//  }
+
+//  if (!result.isNull()) {
+
+//    QString rxtext = ui->rxEdit->toPlainText().trimmed();
+//    QRegExp rx;
+//    if (rxtext.length() > 0 ) {
+//      rx.setPattern(rxtext);
+//      rx.setPatternSyntax(QRegExp::RegExp2);
+//      //rx.setCaseSensitivity(Qt::CaseInsensitive);
+
+//    }
+//    //trayIcon->showMessage("read", buffer, QSystemTrayIcon::Information, 15000);
+//    QXmlStreamReader xml;
+//    //ui->plainTextEdit->setPlainText( result);
+//#ifdef DBG
+//    qDebug() << "Result: " << result;
+//#endif
+//    xml.addData(result);
+//    int count_mess = 0;
+//    bool flagStateRX = false;
+//    QString id = "", messageA = "", messageB = "", hashid = "", msg;
+//    inf apptinf;
+//    inf_mail message;
+//    QList <inf> listApptinf;
+//    QList <inf_mail> listMessage;
+//    int DismissCalendarItemAlarmResponse = 0;
+//    int MsgActionResponse = 0;
+//    int SearchResponse = 0;
 
 
-        //                }
+//    while (!xml.atEnd()) { //xml parser
+//      xml.readNext();
+//      //******isStartElement
+//      if (xml.isStartElement()) {
+//        //---authToken
+//        if (xml.name().contains("authToken", Qt::CaseInsensitive)) {
+//          QString auth_token = xml.readElementText().trimmed();
+//          if (auth_token.length() > 0) {
+//            startauth = true;
+//            _authToken = auth_token;
+//          }
+//#ifdef DBG
+//          qDebug() << "_authToken:" << _authToken;
+//#endif
+//          break;
+//        }
+//        //---sessionID
+//        if (xml.name().contains("session id", Qt::CaseInsensitive)) {
+//          QString sessionID = xml.readElementText().trimmed();
+//          if (sessionID.length() > 0) {
+//            _sessionID = sessionID;
+//          }
+//#ifdef DBG
+//          qDebug() << "sessionID:" << _sessionID;
+//#endif
+//          break;
+//        }
+//        //---DismissCalendarItemAlarmResponse
+//        if (xml.name() == "DismissCalendarItemAlarmResponse") {
+//          DismissCalendarItemAlarmResponse = 1;
+//          break;
+//        }
+//        //---MsgActionResponse
+//        if (xml.name() == "MsgActionResponse") {
+//          MsgActionResponse = 1;
+//          break;
+//        }
+//        //---SearchResponse
+//        //                if (xml.name() == "SearchResponse"){
 
 
-        //---subject
-        if ((xml.name() == "su")) {
-          QString s = xml.readElementText().trimmed();
-          message.setsubject("<b>" + s + "</b>");
-          messageA = messageA + tr("Subject: ") + s + "\n";
-        }
-        //---fragment
-        if ((xml.name() == "fr")) {
-          QString s = xml.readElementText().trimmed();
-          message.setfragment(s);
-          messageA = messageA + s + "\n";
-        }
-        //---message
-        if ((xml.name() == "m")) {
-
-          message.setmid(xml.attributes().value("id").toString());
-        }
-        //---e adress
-        if (xml.name() == "e") {
-#ifdef DBG
-          qDebug() << "" << flagStateRX << xml.attributes().value("a").toString() ;
-#endif
-          message.setname(xml.attributes().value("p").toString());
-          message.setfrom(xml.attributes().value("a").toString());
-          messageB = messageB + xml.attributes().value("p").toString() + " <" + xml.attributes().value("a").toString() + ">; ";
-          if (!rxtext.isEmpty() && (rxtext.length() > 0)
-              && (( rx.indexIn(xml.attributes().value("a").toString()) >= 0 )
-                  || ( rx.indexIn(xml.attributes().value("p").toString()) >= 0 )
-                  || ( rx.indexIn(xml.attributes().value("d").toString()) >= 0 ))) {
-            flagStateRX = (settings.value("stateRX", "false") == "false") ? false : true;
-#ifdef DBG
-            qDebug() << "((((((((((((march)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))" << flagStateRX << xml.attributes().value("a").toString() ;
-#endif
-          }
-        }
-        //---root mail id
-        if (xml.name() == "c") {
-          if (!message.getId().isEmpty() && !message.getdate().isEmpty()) { //заполнена prev, значит сохраняем prev в список, обнуляем prev, и заполняем next структуру
-            if (flagStateRX) { //проверка на черный список
-              listMessage.append(message);
-              count_mess++;
-              hashid = hashid + id;
-              if (messageA.length() > 0 || messageB.length() > 0) {
-                msg = msg + tr("From: %1\n%2\n").arg(messageB).arg(messageA);
-              }
-            }
-            message.reset();
-          }
-          message.setId(xml.attributes().value("id").toString());
-          message.setdate(xml.attributes().value("d").toString());
-          messageA = "";
-          messageB = "";
-          id = xml.attributes().value("id").toString() + xml.attributes().value("d").toString() + xml.attributes().value("sf").toString();
-          id = QString(QCryptographicHash::hash(id.toUtf8(), QCryptographicHash::Md5).toHex());
-          flagStateRX = (settings.value("stateRX", "false") == "false") ? true : false;
-        }
-
-        if (xml.name() == "SearchResponse") {
-          _error = "";
-          _error_cnt = 0;
-          SearchResponse = 1;
-        }
-        if ((xml.name() == "appt") || (xml.name() == "task")) {
-          if (!apptinf.getmId().isEmpty()) {
-            listApptinf.append(apptinf);
-            apptinf.reset();
-          }
-          apptinf.setmId(xml.attributes().value("id").toString());
-          apptinf.setmdur(xml.attributes().value("dur").toString());
-          apptinf.setmname(xml.attributes().value("name").toString());
-          apptinf.setmloc(xml.attributes().value("loc").toString());
-        }
-        if ((xml.name() == "inst")) {
-          apptinf.setmalarmInstStartsave(xml.attributes().value("s").toString());
-
-          apptinf.setmdueDate(xml.attributes().value("dueDate").toString());
-        }
-
-        if ((xml.name() == "alarmData")) {
-
-          apptinf.setmalarmInstStart(xml.attributes().value("alarmInstStart").toString());
-          apptinf.setmnextAlarm(xml.attributes().value("nextAlarm").toString());
-        }
-
-        if ((xml.name() == "Text")) {
-          _authToken = "";
-          if (_error_cnt == 0) {
-            startauth = true;
-          }
-          _error_cnt++;
-          if (_error.contains("authentication failed for")) {
-            startauth = false;
-          }
-          _error = xml.readElementText().trimmed();
-
-          if (_error.contains("auth credentials have expired")) {
-            startauth = true;
-            break;
-          }
-
-          trayIcon->showMessage(tr("Error:"), tr("%1").arg(_error), QSystemTrayIcon::Critical, 10000);
-          //}
-
-        }
+//        //                }
 
 
-        //qDebug() << xml.name();
-      }//******isStartElement
-    }//while (!xml.atEnd())
+//        //---subject
+//        if ((xml.name() == "su")) {
+//          QString s = xml.readElementText().trimmed();
+//          message.setsubject("<b>" + s + "</b>");
+//          messageA = messageA + tr("Subject: ") + s + "\n";
+//        }
+//        //---fragment
+//        if ((xml.name() == "fr")) {
+//          QString s = xml.readElementText().trimmed();
+//          message.setfragment(s);
+//          messageA = messageA + s + "\n";
+//        }
+//        //---message
+//        if ((xml.name() == "m")) {
 
-    if (!apptinf.getmId().isEmpty()) {
-      listApptinf.append(apptinf);
-      apptinf.reset();
-    }
+//          message.setmid(xml.attributes().value("id").toString());
+//        }
+//        //---e adress
+//        if (xml.name() == "e") {
+//#ifdef DBG
+//          qDebug() << "" << flagStateRX << xml.attributes().value("a").toString() ;
+//#endif
+//          message.setname(xml.attributes().value("p").toString());
+//          message.setfrom(xml.attributes().value("a").toString());
+//          messageB = messageB + xml.attributes().value("p").toString() + " <" + xml.attributes().value("a").toString() + ">; ";
+//          if (!rxtext.isEmpty() && (rxtext.length() > 0)
+//              && (( rx.indexIn(xml.attributes().value("a").toString()) >= 0 )
+//                  || ( rx.indexIn(xml.attributes().value("p").toString()) >= 0 )
+//                  || ( rx.indexIn(xml.attributes().value("d").toString()) >= 0 ))) {
+//            flagStateRX = (settings.value("stateRX", "false") == "false") ? false : true;
+//#ifdef DBG
+//            qDebug() << "((((((((((((march)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))" << flagStateRX << xml.attributes().value("a").toString() ;
+//#endif
+//          }
+//        }
+//        //---root mail id
+//        if (xml.name() == "c") {
+//          if (!message.getId().isEmpty() && !message.getdate().isEmpty()) { //заполнена prev, значит сохраняем prev в список, обнуляем prev, и заполняем next структуру
+//            if (flagStateRX) { //проверка на черный список
+//              listMessage.append(message);
+//              count_mess++;
+//              hashid = hashid + id;
+//              if (messageA.length() > 0 || messageB.length() > 0) {
+//                msg = msg + tr("From: %1\n%2\n").arg(messageB).arg(messageA);
+//              }
+//            }
+//            message.reset();
+//          }
+//          message.setId(xml.attributes().value("id").toString());
+//          message.setdate(xml.attributes().value("d").toString());
+//          messageA = "";
+//          messageB = "";
+//          id = xml.attributes().value("id").toString() + xml.attributes().value("d").toString() + xml.attributes().value("sf").toString();
+//          id = QString(QCryptographicHash::hash(id.toUtf8(), QCryptographicHash::Md5).toHex());
+//          flagStateRX = (settings.value("stateRX", "false") == "false") ? true : false;
+//        }
 
-    if (!message.getId().isEmpty() && !message.getdate().isEmpty()) { //проверяем заполнена ли last структура
-      if (flagStateRX) { //проверка на черный список
-        listMessage.append(message);
-        count_mess++;
-        hashid = hashid + id;
-        if (messageA.length() > 0 || messageB.length() > 0) {
-          msg = msg + tr("From: %1\n%2\n").arg(messageB).arg(messageA);
-        }
-      }
-    }
+//        if (xml.name() == "SearchResponse") {
+//          _error = "";
+//          _error_cnt = 0;
+//          SearchResponse = 1;
+//        }
+//        if ((xml.name() == "appt") || (xml.name() == "task")) {
+//          if (!apptinf.getmId().isEmpty()) {
+//            listApptinf.append(apptinf);
+//            apptinf.reset();
+//          }
+//          apptinf.setmId(xml.attributes().value("id").toString());
+//          apptinf.setmdur(xml.attributes().value("dur").toString());
+//          apptinf.setmname(xml.attributes().value("name").toString());
+//          apptinf.setmloc(xml.attributes().value("loc").toString());
+//        }
+//        if ((xml.name() == "inst")) {
+//          apptinf.setmalarmInstStartsave(xml.attributes().value("s").toString());
 
+//          apptinf.setmdueDate(xml.attributes().value("dueDate").toString());
+//        }
 
-    if (xml.hasError()) {
-#ifdef DBG
-      qDebug() << "ERROR: xml " << xml.errorString();
-#endif
-      // do error handling
-    }
-    //******************************************************************
-    //SearchResponse
-    //******************************************************************
-    if (SearchResponse) {
-      qDebug() << "//SearchResponse" ;
-      qDebug() << "//***   count_mess =" << count_mess << "******************************************************* ";
-      if (count_mess > 0) { //***   count_mess > 0  *******************************************************
+//        if ((xml.name() == "alarmData")) {
 
-        setIcon(7);
-        if (!timerIcon->isActive())
-          timerIcon->start(500);
-        QString hashmessages = QString(QCryptographicHash::hash(hashid.toUtf8(), QCryptographicHash::Md5).toHex());
-        if (settings.value("hashmessages", "") != hashmessages) { //***   hashmessages  *******************************************************
-          settings["hashmessages"] = hashmessages;
-          qDebug() << "//***   old_count_mess =" << settings.value("countmsg", "0").toInt() << "******************************************************* ";
-          if (settings.value("countmsg", "0").toInt() <= count_mess) { //***   count_mess > privios count_mess
-            if (ui->checkBox_2->checkState() == Qt::Checked) { //***   play sound
-              QSound::play("mail.wav");
-            }
-            QString more = "";
-            if (count_mess >= _msgget) {
-              more = tr("more than");
-            }
-            msg.truncate(1000);
-            trayIcon->setToolTip(
-              tr("New messages %2 %1\n%3").arg(count_mess).arg(more).arg(
-                msg));
-            if (ui->checkBox->checkState() == Qt::Checked) {
-              if (mess->check(listMessage))
-                showMessages(true);
-            } else
-              trayIcon->showMessage(tr("New messages %2 %1").arg(count_mess).arg(more), tr("%1").arg(msg), QSystemTrayIcon::Information, 10000);
-          } //***   count_mess > previos count_mess
-          else
-            mess->check(listMessage);
-        } //***   hashmessages  *******************************************************
-      } else { //***   count_mess > 0  *******************************************************
+//          apptinf.setmalarmInstStart(xml.attributes().value("alarmInstStart").toString());
+//          apptinf.setmnextAlarm(xml.attributes().value("nextAlarm").toString());
+//        }
 
-        trayIcon->setToolTip(tr("Zimbra notification"));
-        if (timerIcon->isActive())
-          timerIcon->stop();
-        setIcon(2);
-        mess->check(listMessage);
-        showMessages(false);
-        //                if (!mess->check(listMessage)) {
-        //                    showMessages(false);
-        //                }
-      } //***   count_mess > 0  *******************************************************
-      qDebug() << "//***   listApptinf.size() = " << listApptinf.size() << "******************************************************* ";
-      if (listApptinf.size() > 0) { //***   есть напоминания  *******************************************************
-        if (alarm->checkAppt(listApptinf) > 0) { //проверка на наличие их в таблице напоминаний
-          setIconAppt(alarm->getMsg());
-        } else {
-          setIconAppt("");
-        }
-      } else { //***   есть напоминания  *******************************************************
-        setIconAppt("");
-      }//***   есть напоминания  *******************************************************
-    }
-    //******************************************************************
-    //SearchRequest
-    //******************************************************************
-    //******************************************************************
-    //DismissCalendarItemAlarmResponse
-    //******************************************************************
-    if (DismissCalendarItemAlarmResponse) {
-      qDebug() << "//***   DismissCalendarItemAlarmResponse " << "******************************************************* ";
-      if (alarm->checkCount()) { //есть напоминания
-        setIconAppt(alarm->getMsg());
-      } else {
-        //                if (settings.value("countmsg", "0").toInt()) {
-        //                    if (!timerIcon->isActive())
-        //                        timerIcon->start(500);
-        //                    setIcon(7);
-        //                } else {
-        //                    if (timerIcon->isActive())
-        //                        timerIcon->stop();
-        //                    setIcon(2);
-        //                }
-        setIconAppt("");
-      }
-    }
-    //******************************************************************
-    //DismissCalendarItemAlarmResponse
-    //******************************************************************
-    //******************************************************************
-    //MsgActionResponse
-    //******************************************************************
-    if (MsgActionResponse) {
-      qDebug() << "//***   MsgActionResponse " << "******************************************************* ";
+//        if ((xml.name() == "Text")) {
+//          _authToken = "";
+//          if (_error_cnt == 0) {
+//            startauth = true;
+//          }
+//          _error_cnt++;
+//          if (_error.contains("authentication failed for")) {
+//            startauth = false;
+//          }
+//          _error = xml.readElementText().trimmed();
 
-      //            if (settings.value("countmsg", "0").toInt()) {
-      //                if (!timerIcon->isActive())
-      //                    timerIcon->start(500);
-      //                setIcon(7);
-      //            } else {
-      //                if (timerIcon->isActive())
-      //                    timerIcon->stop();
-      //                setIcon(2);
-      //            }
-    }
-    //******************************************************************
-    //MsgActionResponse
-    //******************************************************************
+//          if (_error.contains("auth credentials have expired")) {
+//            startauth = true;
+//            break;
+//          }
+
+//          trayIcon->showMessage(tr("Error:"), tr("%1").arg(_error), QSystemTrayIcon::Critical, 10000);
+//          //}
+
+//        }
 
 
-    if (!_error.isEmpty()) {
-      setIcon(1);
-    }
-    //qDebug() << "cont_mess:"<< count_mess;
-    buffer = "";
-    _ContentLength = 0;
-    if (!DismissCalendarItemAlarmResponse)
-      settings["countmsg"] = QString::number(count_mess);
-  }
-  if (startauth)
-    sendSearch();
+//        //qDebug() << xml.name();
+//      }//******isStartElement
+//    }//while (!xml.atEnd())
+
+//    if (!apptinf.getmId().isEmpty()) {
+//      listApptinf.append(apptinf);
+//      apptinf.reset();
+//    }
+
+//    if (!message.getId().isEmpty() && !message.getdate().isEmpty()) { //проверяем заполнена ли last структура
+//      if (flagStateRX) { //проверка на черный список
+//        listMessage.append(message);
+//        count_mess++;
+//        hashid = hashid + id;
+//        if (messageA.length() > 0 || messageB.length() > 0) {
+//          msg = msg + tr("From: %1\n%2\n").arg(messageB).arg(messageA);
+//        }
+//      }
+//    }
+
+
+//    if (xml.hasError()) {
+//#ifdef DBG
+//      qDebug() << "ERROR: xml " << xml.errorString();
+//#endif
+//      // do error handling
+//    }
+//    //******************************************************************
+//    //SearchResponse
+//    //******************************************************************
+//    if (SearchResponse) {
+//      qDebug() << "//SearchResponse" ;
+//      qDebug() << "//***   count_mess =" << count_mess << "******************************************************* ";
+//      if (count_mess > 0) { //***   count_mess > 0  *******************************************************
+
+//        setIcon(7);
+//        if (!timerIcon->isActive())
+//          timerIcon->start(500);
+//        QString hashmessages = QString(QCryptographicHash::hash(hashid.toUtf8(), QCryptographicHash::Md5).toHex());
+//        if (settings.value("hashmessages", "") != hashmessages) { //***   hashmessages  *******************************************************
+//          settings["hashmessages"] = hashmessages;
+//          qDebug() << "//***   old_count_mess =" << settings.value("countmsg", "0").toInt() << "******************************************************* ";
+//          if (settings.value("countmsg", "0").toInt() <= count_mess) { //***   count_mess > privios count_mess
+//            if (ui->checkBox_2->checkState() == Qt::Checked) { //***   play sound
+//              QSound::play("mail.wav");
+//            }
+//            QString more = "";
+//            if (count_mess >= _msgget) {
+//              more = tr("more than");
+//            }
+//            msg.truncate(1000);
+//            trayIcon->setToolTip(
+//              tr("New messages %2 %1\n%3").arg(count_mess).arg(more).arg(
+//                msg));
+//            if (ui->checkBox->checkState() == Qt::Checked) {
+////              if (mess->check(listMessage))
+////                showMessages(true);
+////            } else
+////              trayIcon->showMessage(tr("New messages %2 %1").arg(count_mess).arg(more), tr("%1").arg(msg), QSystemTrayIcon::Information, 10000);
+//            }
+//          } //***   count_mess > previos count_mess
+//          else
+//            mess->check(listMessage);
+//        } //***   hashmessages  *******************************************************
+//      } else { //***   count_mess > 0  *******************************************************
+
+//        trayIcon->setToolTip(tr("Zimbra notification"));
+//        if (timerIcon->isActive())
+//          timerIcon->stop();
+//        setIcon(2);
+//        mess->check(listMessage);
+//        showMessages(false);
+//        //                if (!mess->check(listMessage)) {
+//        //                    showMessages(false);
+//        //                }
+//      } //***   count_mess > 0  *******************************************************
+//      qDebug() << "//***   listApptinf.size() = " << listApptinf.size() << "******************************************************* ";
+//      if (listApptinf.size() > 0) { //***   есть напоминания  *******************************************************
+//        if (alarm->checkAppt(listApptinf) > 0) { //проверка на наличие их в таблице напоминаний
+//          setIconAppt(alarm->getMsg());
+//        } else {
+//          setIconAppt("");
+//        }
+//      } else { //***   есть напоминания  *******************************************************
+//        setIconAppt("");
+//      }//***   есть напоминания  *******************************************************
+//    }
+//    //******************************************************************
+//    //SearchRequest
+//    //******************************************************************
+//    //******************************************************************
+//    //DismissCalendarItemAlarmResponse
+//    //******************************************************************
+//    if (DismissCalendarItemAlarmResponse) {
+//      qDebug() << "//***   DismissCalendarItemAlarmResponse " << "******************************************************* ";
+//      if (alarm->checkCount()) { //есть напоминания
+//        setIconAppt(alarm->getMsg());
+//      } else {
+//        //                if (settings.value("countmsg", "0").toInt()) {
+//        //                    if (!timerIcon->isActive())
+//        //                        timerIcon->start(500);
+//        //                    setIcon(7);
+//        //                } else {
+//        //                    if (timerIcon->isActive())
+//        //                        timerIcon->stop();
+//        //                    setIcon(2);
+//        //                }
+//        setIconAppt("");
+//      }
+//    }
+//    //******************************************************************
+//    //DismissCalendarItemAlarmResponse
+//    //******************************************************************
+//    //******************************************************************
+//    //MsgActionResponse
+//    //******************************************************************
+//    if (MsgActionResponse) {
+//      qDebug() << "//***   MsgActionResponse " << "******************************************************* ";
+
+//      //            if (settings.value("countmsg", "0").toInt()) {
+//      //                if (!timerIcon->isActive())
+//      //                    timerIcon->start(500);
+//      //                setIcon(7);
+//      //            } else {
+//      //                if (timerIcon->isActive())
+//      //                    timerIcon->stop();
+//      //                setIcon(2);
+//      //            }
+//    }
+//    //******************************************************************
+//    //MsgActionResponse
+//    //******************************************************************
+
+
+//    if (!_error.isEmpty()) {
+//      setIcon(1);
+//    }
+//    //qDebug() << "cont_mess:"<< count_mess;
+//    buffer = "";
+//    _ContentLength = 0;
+//    if (!DismissCalendarItemAlarmResponse)
+//      settings["countmsg"] = QString::number(count_mess);
+//  }
+//  if (startauth)
+//    sendSearch();
 
 }
 
@@ -1574,26 +1583,6 @@ void Zebra::socketReadBuffer(const  QByteArray& line, const qint64& size)
 
 void Zebra::doxml(const QString& xmldata)
 {
-
-#ifdef DBG
-  ui->textBrowser_2->setText(xmldata);
-  qDebug() << "";
-  qDebug() << "doxml --- --- --- --- --- " ;
-  qDebug() << xmldata.size();
-  qDebug() << "doxml --- --- --- --- ---- ";
-#endif
-  int count_mess = 0;
-  bool flagStateRX = false;
-
-  QString id = "", messageA = "", messageB = "", hashid = "", msg;
-  inf apptinf;
-
-  QList <inf> listApptinf;
-  QList <inf_mail> listMessage;
-  int DismissCalendarItemAlarmResponse = 0;
-  int MsgActionResponse = 0;
-  int SearchResponse = 0;
-
   QString qsession("declare namespace soap = \"http://www.w3.org/2003/05/soap-envelope\";"
                    "declare namespace zimbra = \"urn:zimbra\";"
                    "declare namespace zimbraAccount = \"urn:zimbraAccount\";"
@@ -1650,11 +1639,18 @@ void Zebra::doxml(const QString& xmldata)
       "for $d in //zimbraMail:DismissCalendarItemAlarmResponse/zimbraMail:appt return $d/@calItemId/string()");
 
 
+  QString id = "", hashid = "";
+  QList <inf_appt> listApptinf;
+  QList <inf_mail> listMessage;
+
+
   QXmlQuery query;
   QString r;
   QStringList FaultList;
   QStringList ResponseList;
+
   bool startauth = false;
+  bool flagStateRX = false;
   QString rxtext = ui->rxEdit->toPlainText().trimmed();
   QRegExp rx;
   if (rxtext.length() > 0 ) {
@@ -1678,6 +1674,7 @@ void Zebra::doxml(const QString& xmldata)
 #endif
     }
   }
+
   query.setQuery(qchange);
   if (query.isValid()) {
     if(query.evaluateTo(&r)) {
@@ -1691,6 +1688,7 @@ void Zebra::doxml(const QString& xmldata)
 #endif
     }
   }
+
   query.setQuery(qauthToken);
   if (query.isValid()) {
     if(query.evaluateTo(&r)) {
@@ -1705,9 +1703,6 @@ void Zebra::doxml(const QString& xmldata)
 #endif
     }
   }
-//#ifdef QT_DEBUG
-//  qDebug() << "_authToken: " << _authToken;
-//#endif
 
   query.setQuery(qsearchResponse);
   if (query.isValid()) {
@@ -1724,13 +1719,8 @@ void Zebra::doxml(const QString& xmldata)
           message.setmid(strlist.at(3));
           message.setfrom(strlist.at(4));
           message.setname(strlist.at(6));
-          message.setsubject("<b>" + strlist.at(7) + "</b>");
+          message.setsubject(strlist.at(7));
           message.setfragment(strlist.at(8));
-
-          messageA = tr("Subject: ") + message.getsubject() + "\n" + message.getfragment() + "\n";
-          messageB = message.getname() + " <" + message.getfrom() + ">; \n";
-
-
           id = message.getId() + message.getdate() + strlist.at(2);
           id = QString(QCryptographicHash::hash(id.toUtf8(), QCryptographicHash::Md5).toHex());
 //filter begin
@@ -1745,24 +1735,12 @@ void Zebra::doxml(const QString& xmldata)
               flagStateRX = (settings.value("stateRX", "false") == "false") ? true : false;
             }
           }
-//#ifdef DBG
-//        if (!flagStateRX) {
-//          qDebug() << "in blacklist block: " << flagStateRX << message.getfrom();
-//        }
-//#endif
 //filter end
           if (flagStateRX) {
             listMessage.append(message);
-            count_mess++;
             hashid = hashid + id;
-            msg = msg + tr("From: %1\n%2\n").arg(messageB).arg(messageA);
-//#ifdef QT_DEBUG
-//          qDebug() << "_: " << msg;
-//#endif
           }
         }
-        messageA = "";
-        messageB = "";
       }//end ResponseListIterator
     } else {
 #ifdef DBG
@@ -1780,7 +1758,7 @@ void Zebra::doxml(const QString& xmldata)
         QString str = *ResponseListIterator;
         QStringList strlist = str.split("§");
         if (strlist.size()>7) {
-          inf apptinf;
+          inf_appt apptinf;
           apptinf.setmId(strlist.at(0));
           apptinf.setmdur(strlist.at(1));
           apptinf.setmname(strlist.at(2));
@@ -1801,9 +1779,6 @@ void Zebra::doxml(const QString& xmldata)
     }
   }
 
-
-
-
   query.setQuery(qtextFault);
   if (query.isValid()) {
     query.evaluateTo(&FaultList);
@@ -1812,14 +1787,12 @@ void Zebra::doxml(const QString& xmldata)
       if (_error_cnt == 0) {
         startauth = true;
       }
+
       _error_cnt +=  FaultList.length();
       QString errors = FaultList.join(", ");
       _error = errors;
       if (errors.contains("authentication failed for")) {
         startauth = false;
-      }
-      if (errors.contains("auth credentials have expired")) {
-        startauth = true;
       }
       trayIcon->showMessage(tr("Error:"), tr("%1").arg(_error), QSystemTrayIcon::Critical, 10000);
 #ifdef QT_DEBUG
@@ -1832,7 +1805,6 @@ void Zebra::doxml(const QString& xmldata)
   if (query.isValid()) {
     query.evaluateTo(&r);
     if (r.length() > 0) {
-      DismissCalendarItemAlarmResponse = 1;
       if (alarm->checkCount()) { //есть напоминания
         setIconAppt(alarm->getMsg());
       } else {
@@ -1840,65 +1812,54 @@ void Zebra::doxml(const QString& xmldata)
       }
     }
   }
+  mresult res;
+  res = mess->check(listMessage);
 
-  if (count_mess> 0) { //***   count_mess > 0  *******************************************************
+#ifdef QT_DEBUG
+  qDebug() <<listMessage.size()<< " Message size append remove: " << res.getsize()<<res.getappend()<<res.getremove();
+#endif
+
+  if (res.getsize() > 0) {
     setIcon(7);
     if (!timerIcon->isActive())
       timerIcon->start(500);
-    QString hashmessages = QString(QCryptographicHash::hash(hashid.toUtf8(), QCryptographicHash::Md5).toHex());
-    if (settings.value("hashmessages", "") != hashmessages) { //***   hashmessages  *******************************************************
-      settings["hashmessages"] = hashmessages;
-      //qDebug() << "//***   old_count_mess =" << settings.value("countmsg", "0").toInt() << "******************************************************* ";
-      if (settings.value("countmsg", "0").toInt() <= count_mess) { //***   count_mess > privios count_mess
-        if (ui->checkBox_2->checkState() == Qt::Checked) { //***   play sound
-          QSound::play("mail.wav");
-        }
+    if (ui->checkBox->checkState() == Qt::Checked) {
+      showMessages(true);
+    } else {
+      if(res.getappend()>0) {
         QString more = "";
-        if (count_mess >= _msgget) {
-          more = tr("more than");
-        }
-        msg.truncate(1000);
-        trayIcon->setToolTip(
-          tr("New messages %2 %1\n%3").arg(count_mess).arg(more).arg(
-            msg));
-        if (ui->checkBox->checkState() == Qt::Checked) {
-          if (mess->check(listMessage))
-            showMessages(true);
-        } else
-          trayIcon->showMessage(tr("New messages %2 %1").arg(count_mess).arg(more), tr("%1").arg(msg), QSystemTrayIcon::Information, 10000);
-      } //***   count_mess > previos count_mess
-      else
-        mess->check(listMessage);
-    } //***   hashmessages  *******************************************************
-  } else { //***   count_mess > 0  *******************************************************
+        trayIcon->showMessage(tr("New messages") + " - "+QString::number(res.getsize()), mess->getMsg(), QSystemTrayIcon::Information, 10000);
+      }
+    }
 
-    trayIcon->setToolTip(tr("Zimbra notification"));
+    if(res.getappend()>0) {
+      if (ui->checkBox_2->checkState() == Qt::Checked) { //***   play sound
+        QSound::play(":/sound/mail.wav");
+      }
+    }
+  } else {
     if (timerIcon->isActive())
       timerIcon->stop();
+    trayIcon->setToolTip(tr("Zimbra notification"));
     setIcon(2);
-    mess->check(listMessage);
     showMessages(false);
-    //                if (!mess->check(listMessage)) {
-    //                    showMessages(false);
-    //                }
-  } //***   count_mess > 0  *******************************************************
-  if (listApptinf.size() > 0) { //***   есть напоминания  *******************************************************
-    if (alarm->checkAppt(listApptinf) > 0) { //проверка на наличие их в таблице напоминаний
-      setIconAppt(alarm->getMsg());
-    } else {
-      setIconAppt("");
-    }
-  } else { //***   есть напоминания  *******************************************************
-    setIconAppt("");
-  }//***   есть напоминания  *******************************************************
+  }
 
-  //ui->textBrowser->verticalScrollBar()->setValue(ui->textBrowser->verticalScrollBar()->maximum());
+  mresult resAppt;
+  resAppt = alarm->checkAppt(listApptinf);
+#ifdef QT_DEBUG
+  qDebug() << listApptinf.size()<< " Appointment size append remove black: " << resAppt.getsize()<<resAppt.getappend()<<resAppt.getremove()<<resAppt.getblack();
+#endif
+  if (resAppt.getsize() > 0) {
+    setIconAppt(alarm->getMsg());
+  } else {
+    setIconAppt("");
+  }
+
+//ui->textBrowser->verticalScrollBar()->setValue(ui->textBrowser->verticalScrollBar()->maximum());
   if (!_error.isEmpty()) {
     setIcon(1);
   }
-
-  if (!DismissCalendarItemAlarmResponse)
-    settings["countmsg"] = QString::number(count_mess);
 
   if (startauth)
     sendSearch();

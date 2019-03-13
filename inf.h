@@ -3,8 +3,22 @@
 
 #include <QMetaType>
 #include <QString>
+class account
+{
+  QString url;
+  QString login;
+  QString password;
+public:
+  QString geturl();
+  QString getlogin();
+  QString getpassword();
+  void set(QString u, QString l, QString p);
+  void seturl(QString u);
+  void setlogin(QString l);
+  void setpassword(QString p);
+};
 
-class inf
+class inf_appt
 {
   QString mId;
   QString mname;
@@ -16,8 +30,8 @@ class inf
 
 
 public:
-  inf();
-  inf(const inf &A);
+  inf_appt();
+  inf_appt(const inf_appt &A);
 
   QString getmId();
   QString getmname();
@@ -36,7 +50,7 @@ public:
   QString setmalarmInstStart(const QString &A);
   QString setmalarmInstStartsave(const QString &A);
   QString setmnextAlarm(const QString &A);
-  bool operator ==(inf );
+  bool operator ==(inf_appt );
   void reset();
 };
 
@@ -75,6 +89,20 @@ public:
 
   bool operator ==(inf_mail );
   void reset();
+};
+
+class mresult
+{
+  int size ;
+  int append;
+  int remove;
+  int black;
+public:
+  void setresult(int sz = 0, int ap = 0, int rm = 0, int bl = 0);
+  int getsize();
+  int getappend();
+  int getremove();
+  int getblack();
 };
 
 //Q_DECLARE_METATYPE(inf)

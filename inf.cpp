@@ -4,7 +4,7 @@
 #include <QString>
 #include <QDateTime>
 
-inf::inf()
+inf_appt::inf_appt()
 {
   mId.clear();
   mname.clear();
@@ -16,7 +16,7 @@ inf::inf()
 
 }
 
-inf::inf(const inf &A)
+inf_appt::inf_appt(const inf_appt &A)
 {
   mId = A.mId;
   mname = A.mname;
@@ -28,22 +28,22 @@ inf::inf(const inf &A)
 
 }
 
-QString inf::getmId()
+QString inf_appt::getmId()
 {
   return mId;
 }
 
-QString inf::getmname()
+QString inf_appt::getmname()
 {
   return mname;
 }
 
-QString inf::getmloc()
+QString inf_appt::getmloc()
 {
   return mloc;
 }
 
-QString inf::getmdur()
+QString inf_appt::getmdur()
 {
   if (mdueDate.isEmpty())
     return mdur;
@@ -53,22 +53,22 @@ QString inf::getmdur()
   return "";
 }
 
-QString inf::getmalarmInstStart()
+QString inf_appt::getmalarmInstStart()
 {
   return malarmInstStart;
 }
 
-QString inf::getmnextAlarm()
+QString inf_appt::getmnextAlarm()
 {
   return mnextAlarm;
 }
 
-QString inf::getmdueDate()
+QString inf_appt::getmdueDate()
 {
   return mdueDate;
 }
 
-QString inf::getstr()
+QString inf_appt::getstr()
 {
   qint64 end = malarmInstStart.toLongLong() + mdur.toLongLong();
   return QString("name: %2 inst: %5 end: %7 id: %1 loc: %3 dur: %4  na: %6").arg(mId)
@@ -77,7 +77,7 @@ QString inf::getstr()
          .arg(QDateTime::fromMSecsSinceEpoch(end).toString());
 }
 
-QString inf::getstrMsg( )
+QString inf_appt::getstrMsg( )
 {
   qint64 now = QDateTime::currentMSecsSinceEpoch();
   qint64 msecs = 0, start = 0,end = 0,alarm = 0;
@@ -113,29 +113,29 @@ QString inf::getstrMsg( )
   return mname + ": " + formattedTime + "";
 }
 
-QString inf::setmId(const QString &A)
+QString inf_appt::setmId(const QString &A)
 {
   mId = A;
   return mId;
 }
 
-QString inf::setmname(const QString &A)
+QString inf_appt::setmname(const QString &A)
 {
   mname = A;
   return mId;
 }
-QString inf::setmloc(const QString &A)
+QString inf_appt::setmloc(const QString &A)
 {
   mloc = A;
   return mId;
 }
-QString inf::setmdur(const QString &A)
+QString inf_appt::setmdur(const QString &A)
 {
   mdur = A;
   return mId;
 }
 
-QString inf::setmdueDate(const QString &A)
+QString inf_appt::setmdueDate(const QString &A)
 {
 
   mdueDate = A;
@@ -143,34 +143,34 @@ QString inf::setmdueDate(const QString &A)
   return mId;
 }
 
-QString inf::setmalarmInstStart(const QString &A)
+QString inf_appt::setmalarmInstStart(const QString &A)
 {
   //if(malarmInstStart.isEmpty())
   malarmInstStart = A;
   return mId;
 }
-QString inf::setmalarmInstStartsave(const QString &A)
+QString inf_appt::setmalarmInstStartsave(const QString &A)
 {
   if(malarmInstStart.isEmpty())
     malarmInstStart = A;
 
   return mId;
 }
-QString inf::setmnextAlarm(const QString &A)
+QString inf_appt::setmnextAlarm(const QString &A)
 {
   if(mnextAlarm.isEmpty())
     mnextAlarm = A;
   return mId;
 }
 
-bool inf::operator ==(inf A)
+bool inf_appt::operator ==(inf_appt A)
 {
   if ((mId == A.mId)&&(mname == A.mname)&&(mloc == A.mloc)&&(mdur == A.mdur)&&(malarmInstStart == A.malarmInstStart))
     return true;
   return false;
 }
 
-void inf::reset()
+void inf_appt::reset()
 {
   mId.clear();
   mname.clear();
@@ -286,3 +286,60 @@ void inf_mail::reset()
   fragment.clear();
   mId.clear();
 }
+
+void mresult::setresult(int sz, int ap, int rm, int bl )
+{
+  this->size = sz;
+  this->append = ap;
+  this->remove = rm;
+  this->black = bl;
+}
+
+int mresult::getsize()
+{
+  return this->size;
+}
+int mresult::getappend()
+{
+  return this->append;
+}
+int mresult::getremove()
+{
+  return this->remove;
+}
+int mresult::getblack()
+{
+  return this->black;
+}
+
+QString account::geturl()
+{
+  return this->url;
+}
+QString account::getlogin()
+{
+  return this->login;
+}
+QString account::getpassword()
+{
+  return this->password;
+}
+void account::set(QString u, QString l, QString p)
+{
+  this->url = u;
+  this->login = l;
+  this->password = p;
+}
+void account::seturl(QString u)
+{
+  this->url = u;
+}
+void account::setlogin(QString l)
+{
+  this->login = l;
+}
+void account::setpassword(QString p)
+{
+  this->password = p;
+}
+

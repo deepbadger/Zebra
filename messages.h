@@ -3,8 +3,10 @@
 
 #include <QWidget>
 #include <QItemSelection>
+#include "inf.h"
 
-namespace Ui {
+namespace Ui
+{
 class Messages;
 }
 
@@ -14,32 +16,33 @@ class tableDelegate;
 
 class Messages : public QWidget
 {
-    Q_OBJECT
-    
-public:
-    explicit Messages(QWidget *parent = 0);
-    ~Messages();
+  Q_OBJECT
 
-    int check(const QList<inf_mail> list);
-    int cnt();
+public:
+  explicit Messages(QWidget *parent = 0);
+  ~Messages();
+
+  mresult check(const QList<inf_mail> list);
+  QString getMsg();
+  int cnt();
 
 
 signals:
-    void emul(QString);
-    void filter(QString);
-    void open();
+  void emul(QString);
+  void filter(QString);
+  void open();
 
 private slots:
-    void slotLoadTransaction(const QItemSelection & sel, const QItemSelection & desel);
-    void acceptRead();
-    void acceptOpen();
-    void acceptFilter();
-    void filterOK(QString s);
-    
+  void slotLoadTransaction(const QItemSelection & sel, const QItemSelection & desel);
+  void acceptRead();
+  void acceptOpen();
+  void acceptFilter();
+  void filterOK(QString s);
+
 private:
-    Ui::Messages *ui;
-    Messmodel *Model;
-    tableDelegate *delegat;
+  Ui::Messages *ui;
+  Messmodel *Model;
+  tableDelegate *delegat;
 };
 
 #endif // MESSAGES_H
